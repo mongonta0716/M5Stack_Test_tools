@@ -85,8 +85,8 @@ void dispTitle() {
   M5.Lcd.setCursor(0, 0);
   M5.Lcd.clear();
   M5.Lcd.println("Press Button");
-  M5.Lcd.println("Button A:SPIFFS Benchmark");
-  M5.Lcd.println("Button B:SD     Benchmark");
+  M5.Lcd.println("Button B:SPIFFS Benchmark");
+  M5.Lcd.println("Button C:SD     Benchmark");
 }
 
 void setup() {
@@ -104,7 +104,7 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   M5.update();
-  if (M5.BtnA.wasPressed()) {
+  if (M5.BtnB.wasPressed()) {
     dispTitle();
     M5.Lcd.print("SPIFFS Bench Start!  \n");
     Serial.print("SPIFFS Bench \n");
@@ -112,7 +112,7 @@ void loop() {
     benchmarkStart(SPIFFS);
     M5.Lcd.print("SPIFFS Bench Finished\n");
   }
-  if (M5.BtnB.wasPressed()) {
+  if (M5.BtnC.wasPressed()) {
     dispTitle();
     M5.Lcd.print("SD Bench Start!      \n");
     Serial.print("SD Bench \n");
