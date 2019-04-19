@@ -4,21 +4,30 @@
 #include <FS.h>
 
 String filepath = "/benchmark";
-
 int benchmarkMode = 1;
 
-volatile void getWriteTime(fs::FS &fs, int size, int loop)
+// If you want to change the measurement conditions, change the following constants.
+// Notice: If the total file size exceeds the size of SPIFFS, it does not work properly.
+
+const int initialSize    = 4096;  // Initial File Size
+const int increaseSize   = 4096;  // File increase size
+const int increaseCount  = 10;    // increment count
+const int loopCount      = 3;     // Number of measurements
+
+
+volatile void startWriteTest(fs::FS &fs, int size, int loop)
 {  
   int buffer = 4096;
   int fileloop = size / buffer;
-
+  int residue = size % buffer;
+  
   uint8_t buf[buffer];
   uint64_t res = 0;
   uint64_t sum = 0;
   File f;
   for (int i = 0; i < buffer; ++i) { buf[i] = uint8_t(0xFF); }
   
-  Serial.printf("Write,%u,", size / 1000);
+  Serial.printf("Write,%u,", size );
   M5.Lcd.printf("Writing %5u KB :", size / 1000);
   for ( int i = 0; i < loop; ++i) {
     M5.Lcd.print(".");
@@ -26,6 +35,9 @@ volatile void getWriteTime(fs::FS &fs, int size, int loop)
     uint64_t start = micros();
     for (int j = 0; j < fileloop; ++j) {
       f.write(&buf[0], buffer);
+    }
+    if (residue != 0) {
+      f.write(&buf[0], residue);
     }
     f.flush();
     res = micros() - start;
@@ -37,17 +49,18 @@ volatile void getWriteTime(fs::FS &fs, int size, int loop)
   M5.Lcd.printf(": Avr %5u KB/s\n", uint32_t((uint64_t)(size * loop * 1000) /sum));
 }
 
-volatile void getReadTime(fs::FS &fs, int size, int loop)
+volatile void startReadTest(fs::FS &fs, int size, int loop)
 {  
   int buffer = 4096;
   int fileloop = size / buffer;
+  int residue = size % buffer;
 
   uint8_t buf[buffer];
   uint64_t res = 0;
   uint64_t sum = 0;
   File f;
-
-  Serial.printf("Read,%u,", size / 1000);
+  
+  Serial.printf("Read,%u,", size );
   M5.Lcd.printf("Reading %5u KB :", size / 1000);
   for ( int i = 0; i < loop; ++i) {
     M5.Lcd.print(".");
@@ -55,6 +68,9 @@ volatile void getReadTime(fs::FS &fs, int size, int loop)
     uint64_t start = micros();
     for (int j = 0; j < fileloop; ++j) {
       f.read(&buf[0], buffer);
+    }
+    if (residue != 0) {
+      f.write(&buf[0], residue);
     }
     f.flush();
     res = micros() - start;
@@ -73,44 +89,45 @@ void removeFile(fs::FS &fs, int loop) {
 }
 
 void benchmarkStart(fs::FS &fs ,String fsstr) {
-  int size = 4096;
-  int loop = 3;
 
   int filesize = 0;
-
   dispTitle();
 
-  M5.Lcd.print(fsstr + " Bench Start!  \n");
-  Serial.print(fsstr + " Bench Start---------------------------------\n");
+  M5.Lcd.println(fsstr + " Bench Start!  ");
+  Serial.println(fsstr + " Bench Start---------------------------------");
 
-  Serial.print("Read/Write,Filesize(KB),");
-  for (int i = 0; i < loop; i++) {
-    Serial.printf("loop%u(KB/sec),", i);
+  Serial.print("Read/Write,Filesize(B),");
+  for (int i = 0; i < loopCount; i++) {
+    Serial.printf("%utime(KB/sec),", i + 1);
   }
   Serial.println("average(KB/sec)");
-  
-  for (int i = 1; i < 10; i++) {
+
+  for (int i = 0; i < increaseCount; i++) {
     if (benchmarkMode == 1) {
-      filesize = size * i ;
+      filesize = initialSize + increaseSize * i ;
     } else {
-      filesize = size * i * i;
+      filesize = initialSize + increaseSize * i * i;
     }
-    getWriteTime(fs, filesize, loop);
-    getReadTime(fs, filesize, loop);
-    removeFile(fs, loop);
+    startWriteTest(fs, filesize, loopCount);
+    startReadTest(fs, filesize, loopCount);
+    removeFile(fs, loopCount);
   }
 
-  M5.Lcd.print(fsstr + " Bench Finished\n");
-  Serial.print(fsstr + " Bench Finished\n");
+  M5.Lcd.println(fsstr + " Bench Finished");
+  Serial.println(fsstr + " Bench Finished");
 }
 
 void dispTitle() {
+
+  Serial.printf("Press Button : mode = %u\n", benchmarkMode);
   M5.Lcd.setCursor(0, 0);
   M5.Lcd.clear();
   M5.Lcd.printf("Press Button : mode = %u\n", benchmarkMode);
-  M5.Lcd.println("Button A:Mode Change 1:4-36KB 2:4-331KB");
+  M5.Lcd.printf("InitSize = %u B:IncreaseSize = %u B\n", initialSize, increaseSize);
+  M5.Lcd.println("Button A:Increase Mode Change 1:Normal 2: Multiple");
   M5.Lcd.println("Button B:SPIFFS Benchmark");
   M5.Lcd.println("Button C:SD     Benchmark");
+
 }
 
 void setup() {
@@ -123,17 +140,18 @@ void setup() {
   }
 
   dispTitle();
+
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
+
   M5.update();
   if (M5.BtnA.wasPressed()) {
     if (benchmarkMode == 1) {
-      // filesize 4096 * loop * loop
+      // filesize increase multiple
       benchmarkMode = 2;
     } else {
-      // fileseize 4096 * loop
+      // fileseize increase normal
       benchmarkMode = 1;
     }
     dispTitle();
