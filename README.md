@@ -1,6 +1,23 @@
 # M5Stack_Test_tools
 
-M5Stackのテスト用アプリです。
+M5Stackのテスト用アプリやツールを集めました。
+
+Test Apps and tools for M5Stack.
+
+# Contents
+
+## BenckMark
+SPIFFSとmicroSDカードのベンチマークを行うSD-Updater対応のアプリです。
+ソースのconstを調整するとバイト単位でファイルサイズや試行回数を調整できます。
+
+## tools/png2code.py
+pngファイルをM5Stack TFT_eSPIライブラリのSprite::pushImageで扱えるようにC言語ヘッダファイルへ変換するツールです。
+Python3の実行環境が必要です。
+下記のソースを参考にさせていただきました。
+
+https://github.com/m5stack/M5Stack/tree/master/tools
+https://github.com/iikagenlabo/png2img
+
 
 # Requirement
 
