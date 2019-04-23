@@ -4,7 +4,7 @@
 #include <FS.h>
 
 String filepath = "/benchmark";
-int benchmarkMode = 1;
+int benchmarkMode = 1; // 1:normal increase 2:multiple increase
 
 // If you want to change the measurement conditions, change the following constants.
 // Notice: If the total file size exceeds the size of SPIFFS, it does not work properly.
@@ -161,6 +161,8 @@ void loop() {
     benchmarkStart(SPIFFS, "SPIFFS");
   }
   if (M5.BtnC.wasPressed()) {
+    SD.end();
+    SD.begin(TFCARD_CS_PIN, SPI, 40000000);
     benchmarkStart(SD, "SD");
   }
 
