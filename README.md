@@ -33,7 +33,7 @@ https://github.com/iikagenlabo/png2img
 
 変換したいpngファイルを指定します。実行後にファイル名.hのヘッダファイルが作成されます。
 
-```python example.png```
+```python png2code.py example.png```
 
 
 
